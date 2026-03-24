@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Bus Ticket</title>
+        <script>
+            /*
+             * Do not change anything <script> tag.
+             */
+            function checkRequirements() {
+                let errors = [];
+
+                // check for FORM tag.
+                let formElement = document.querySelector("form");
+                if (formElement === null) {
+                    errors.push("There must be a FORM tag.");
+                    return errors; // return immediately if there's no form tag
+                }
+
+                // submit and reset buttons
+                if (
+                    formElement.querySelector("input[type='submit']") ===
+                        null &&
+                    formElement.querySelector("button[type='submit']") === null
+                ) {
+                    errors.push("There must be a button with type SUBMIT.");
+                }
+                if (
+                    formElement.querySelector("input[type='reset']") === null &&
+                    formElement.querySelector("button[type='reset']") === null
+                ) {
+                    errors.push("There must be a button with type RESET.");
+                }
+
+                return errors;
+            } // end function checkRequirements
+
+            function handleSubmission(e) {
+                e.preventDefault();
+                alert("Validation OK");
+            }
+
+            window.onload = function () {
+                let errors = checkRequirements();
+                if (errors.length > 0) {
+                    alert(errors.join("\n"));
+                } else {
+                    document
+                        .querySelector("form")
+                        .addEventListener("submit", handleSubmission);
+                }
+            };
+
+            /*
+             * Do not change anything <script> tag.
+             */
+        </script>
+    </head>
+    <body></body>
+</html>
