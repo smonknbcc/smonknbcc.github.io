@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6 Colour Grid Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            line-height: 1.5;
+            color: #222;
+        }
+
+        h1 {
+            margin-bottom: 0.25em;
+        }
+
+        .instructions {
+            margin-bottom: 1.5em;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(5, 70px);
+            grid-template-rows: repeat(6, 70px);
+            gap: 6px;
+            margin: 1.5em 0;
+        }
+
+        .cell {
+            border: 1px solid #444;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+            background: #f4f4f4;
+        }
+
+        .A { background: #f8c8c8; }
+        .B { background: #c8ddf8; }
+        .C { background: #c8f8d2; }
+        .D { background: #f8edc8; }
+        .E { background: #e2c8f8; }
+        .F { background: #c8f4f8; }
+
+        button {
+            font-size: 1rem;
+            padding: 0.7em 1.1em;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        #message {
+            margin-top: 1em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>6 Colour Grid Generator</h1>
+
+    <p class="instructions">
+        This generates a 6 x 5 grid using colours A-F. Each colour is used exactly five times.
+        No two touching cells may have the same colour, including horizontal, vertical, and diagonal touching.
+    </p>
+
+    <button id="generate-button">Generate Colouring</button>
+
+    <div id="grid"></div>
+
+    <p id="message"></p>
+
+    <script>
+        "use strict";
+
+        const ROWS = 6;
+        const COLS = 5;
+        const COLOURS = ["A", "B", "C", "D", "E", "F"];
+        const MAX_USES_PER_COLOUR = 5;
+
+        window.onload = main;
+
+        function main() {
+            createEmptyGrid();
+            document.querySelector("#generate-button").onclick = generateColouring;
+        }
+
+        function createEmptyGrid() {
+            const grid = document.querySelector("#grid");
+            grid.innerHTML = "";
+
+            for (let i = 0; i < ROWS * COLS; i++) {
+                const cell = document.createElement("div");
+                cell.className = "cell";
+                grid.appendChild(cell);
+            }
+        }
+
+        function generateColouring() {
+            const board = createBlankBoard();
+            const counts = createColourCounts();
+            const success = fillCell(board, counts, 0);
+
+            if (success) {
+                displayBoard(board);
+                document.querySelector("#message").textContent = "Valid colouring generated.";
+            } else {
+                document.querySelector("#message").textContent = "No solution found.";
+            }
+        }
+
+        function createBlankBoard() {
+            const board = [];
+
+            for (let row = 0; row < ROWS; row++) {
+                board.push([]);
+
+                for (let col = 0; col < COLS; col++) {
+                    board[row].push("");
+                }
+            }
+
+            return board;
+        }
+
+        function createColourCounts() {
+            const counts = {};
+
+            for (let i = 0; i < COLOURS.length; i++) {
+                counts[COLOURS[i]] = 0;
+            }
+
+            return counts;
+        }
+
+        function fillCell(board, counts, cellNumber) {
+            if (cellNumber === ROWS * COLS) {
+                return allColoursUsedExactlyFiveTimes(counts);
+            }
+
+            const row = Math.floor(cellNumber / COLS);
+            const col = cellNumber % COLS;
+            const shuffledColours = shuffleArray(COLOURS.slice());
+
+            for (let i = 0; i < shuffledColours.length; i++) {
+                const colour = shuffledColours[i];
+
+                if (canPlaceColour(board, counts, row, col, colour)) {
+                    board[row][col] = colour;
+                    counts[colour]++;
+
+                    if (fillCell(board, counts, cellNumber + 1)) {
+                        return true;
+                    }
+
+                    board[row][col] = "";
+                    counts[colour]--;
+                }
+            }
+
+            return false;
+        }
+
+        function canPlaceColour(board, counts, row, col, colour) {
+            if (counts[colour] >= MAX_USES_PER_COLOUR) {
+                return false;
+            }
+
+            if (countColourInRow(board, row, colour) >= 2) {
+                return false;
+            }
+
+            return !touchesSameColour(board, row, col, colour);
+        }
+
+        function countColourInRow(board, row, colour) {
+            let count = 0;
+
+            for (let col = 0; col < COLS; col++) {
+                if (board[row][col] === colour) {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        function touchesSameColour(board, row, col, colour) {
+            for (let rowOffset = -1; rowOffset <= 1; rowOffset++) {
+                for (let colOffset = -1; colOffset <= 1; colOffset++) {
+                    if (rowOffset !== 0 || colOffset !== 0) {
+                        const checkRow = row + rowOffset;
+                        const checkCol = col + colOffset;
+
+                        if (isInsideBoard(checkRow, checkCol) && board[checkRow][checkCol] === colour) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        function isInsideBoard(row, col) {
+            return row >= 0 && row < ROWS && col >= 0 && col < COLS;
+        }
+
+        function allColoursUsedExactlyFiveTimes(counts) {
+            for (let i = 0; i < COLOURS.length; i++) {
+                if (counts[COLOURS[i]] !== MAX_USES_PER_COLOUR) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function displayBoard(board) {
+            const cells = document.querySelectorAll(".cell");
+
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    const index = row * COLS + col;
+                    const colour = board[row][col];
+
+                    cells[index].textContent = colour;
+                    cells[index].className = "cell " + colour;
+                }
+            }
+        }
+
+        function shuffleArray(items) {
+            for (let i = items.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                const temp = items[i];
+                items[i] = items[j];
+                items[j] = temp;
+            }
+
+            return items;
+        }
+    </script>
+</body>
+</html>
